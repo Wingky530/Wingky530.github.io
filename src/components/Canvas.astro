@@ -17,7 +17,7 @@
 <canvas class="fixed inset-0 z-[-1]" id="canvas"></canvas>
 
 <script>
-  let currentColor = '#ebebdf';
+  let currentColor = '';
 
   function getPrimaryColor(): string {
     const css = getComputedStyle(document.documentElement);
@@ -43,7 +43,11 @@
       canvas.height = window.innerHeight;
     }
 
-    window.addEventListener('resize', resizeCanvas);
+    let resizeTimerCanvas: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimerCanvas);
+      resizeTimerCanvas = setTimeout(resizeCanvas, 150);
+    });
     resizeCanvas();
 
     currentColor = getPrimaryColor();

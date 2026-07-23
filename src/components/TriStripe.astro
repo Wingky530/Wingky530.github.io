@@ -1,0 +1,56 @@
+---
+/**
+ * TriStripe.astro — Reusable tri-color accent stripe.
+ *
+ * Renders a thin bar split into three equal segments (Arc Blue, Amber, Green).
+ * Used as separator between dark bars and content, inspired by Endfield UI.
+ *
+ * ── Props ──
+ * - height    Stripe height in px (default: 3)
+ * - vertical  Render as vertical stripe instead of horizontal
+ * - class     Additional CSS classes
+ */
+
+interface Props {
+  height?: number;
+  vertical?: boolean;
+  class?: string;
+}
+
+const { height = 3, vertical = false, class: className = '' } = Astro.props;
+---
+
+<div
+  class:list={['tri-stripe', { 'tri-stripe--vertical': vertical }, className]}
+  style={vertical ? `width: ${height}px` : `height: ${height}px`}
+  aria-hidden="true"
+/>
+
+<style>
+  .tri-stripe {
+    display: flex;
+    width: 100%;
+    background: linear-gradient(
+      to right,
+      var(--color-accent) 0%,
+      var(--color-accent) 33.33%,
+      var(--color-accent-amber) 33.33%,
+      var(--color-accent-amber) 66.66%,
+      var(--color-accent-green) 66.66%,
+      var(--color-accent-green) 100%
+    );
+  }
+  .tri-stripe--vertical {
+    width: auto;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      var(--color-accent) 0%,
+      var(--color-accent) 33.33%,
+      var(--color-accent-amber) 33.33%,
+      var(--color-accent-amber) 66.66%,
+      var(--color-accent-green) 66.66%,
+      var(--color-accent-green) 100%
+    );
+  }
+</style>

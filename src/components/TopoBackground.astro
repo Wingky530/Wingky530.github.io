@@ -1,0 +1,179 @@
+---
+/**
+ * TopoBackground.astro — Full-viewport canvas topographic contour-map.
+ *
+ * Renders procedural marching-squares contour lines with slow drift animation.
+ * Uses layered sin/cos noise to generate organic terrain, drawn at ~12fps.
+ * Adapts line color to theme via CSS custom property reading.
+ * Includes subtle radial vignette for Endfield-style center focus.
+ *
+ * ── Sections ──
+ * - noise()       Multi-layer sinusoidal noise function
+ * - drawTopo()    Marching squares contour renderer with vignette
+ * - animate()     Slow drift loop at ~12fps
+ * - resize        Canvas resize handler (debounced)
+ */
+---
+
+<canvas id="topo" aria-hidden="true"></canvas>
+
+<style>
+  #topo {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
+<script>
+  const canvas = document.getElementById('topo') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+
+  function getLineColor() {
+    const style = getComputedStyle(document.documentElement);
+    const border = style.getPropertyValue('--color-border').trim();
+    // Parse hex to rgb for rgba usage
+    if (border.startsWith('#')) {
+      const r = parseInt(border.slice(1, 3), 16);
+      const g = parseInt(border.slice(3, 5), 16);
+      const b = parseInt(border.slice(5, 7), 16);
+      return { r, g, b };
+    }
+    return { r: 180, g: 175, b: 160 };
+  }
+
+  function noise(x: number, y: number, seed: number) {
+    let v = 0;
+    v += Math.sin(x * 0.018 + seed) * Math.cos(y * 0.014 + seed * 0.7) * 1.0;
+    v += Math.sin(x * 0.035 + y * 0.028 + seed * 1.3) * 0.5;
+    v += Math.cos(x * 0.055 - y * 0.045 + seed * 0.4) * 0.25;
+    v += Math.sin(x * 0.09 + seed * 2.1) * Math.sin(y * 0.08 + seed * 1.7) * 0.125;
+    v += Math.cos(x * 0.14 + y * 0.12 + seed * 3.0) * 0.06;
+    return v / 1.935;
+  }
+
+  let animOffset = 0;
+  let lineColor = getLineColor();
+
+  function drawTopo() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const levels = 22;
+    const seed = 42.7;
+    const res = 4;
+    const cols = Math.ceil(W / res) + 1;
+    const rows = Math.ceil(H / res) + 1;
+
+    const field: number[][] = [];
+    for (let r = 0; r < rows; r++) {
+      field[r] = [];
+      for (let c = 0; c < cols; c++) {
+        field[r][c] = noise(c * res + animOffset * 0.3, r * res, seed);
+      }
+    }
+
+    const { r: cr, g: cg, b: cb } = lineColor;
+
+    for (let lv = 0; lv < levels; lv++) {
+      const t = -1 + (lv / (levels - 1)) * 2;
+      const isAccent = lv % 4 === 0;
+      const alpha = isAccent ? 0.13 : 0.065;
+      ctx.strokeStyle = `rgba(${cr},${cg},${cb},${alpha})`;
+      ctx.lineWidth = isAccent ? 0.8 : 0.5;
+      ctx.beginPath();
+
+      for (let r = 0; r < rows - 1; r++) {
+        for (let c = 0; c < cols - 1; c++) {
+          const x0 = c * res, y0 = r * res;
+          const x1 = x0 + res, y1 = y0 + res;
+          const a = field[r][c];
+          const b = field[r][c + 1];
+          const d = field[r + 1][c];
+          const e = field[r + 1][c + 1];
+
+          let idx = 0;
+          if (a > t) idx |= 1;
+          if (b > t) idx |= 2;
+          if (e > t) idx |= 4;
+          if (d > t) idx |= 8;
+
+          const lx = (v0: number, v1: number) => x0 + res * (t - v0) / (v1 - v0);
+          const ly = (v0: number, v1: number) => y0 + res * (t - v0) / (v1 - v0);
+
+          switch (idx) {
+            case 1: case 14:
+              ctx.moveTo(lx(a, b), y0); ctx.lineTo(x0, ly(a, d)); break;
+            case 2: case 13:
+              ctx.moveTo(lx(a, b), y0); ctx.lineTo(x1, ly(b, e)); break;
+            case 3: case 12:
+              ctx.moveTo(x0, ly(a, d)); ctx.lineTo(x1, ly(b, e)); break;
+            case 4: case 11:
+              ctx.moveTo(x1, ly(b, e)); ctx.lineTo(lx(d, e), y1); break;
+            case 5:
+              ctx.moveTo(lx(a, b), y0); ctx.lineTo(x1, ly(b, e));
+              ctx.moveTo(x0, ly(a, d)); ctx.lineTo(lx(d, e), y1); break;
+            case 6: case 9:
+              ctx.moveTo(lx(a, b), y0); ctx.lineTo(lx(d, e), y1); break;
+            case 7: case 8:
+              ctx.moveTo(x0, ly(a, d)); ctx.lineTo(lx(d, e), y1); break;
+            case 10:
+              ctx.moveTo(lx(a, b), y0); ctx.lineTo(x0, ly(a, d));
+              ctx.moveTo(x1, ly(b, e)); ctx.lineTo(lx(d, e), y1); break;
+          }
+        }
+      }
+      ctx.stroke();
+    }
+  }
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    drawTopo();
+  }
+
+  let rafId: number;
+  let lastTime = 0;
+  function animate(ts: number) {
+    if (ts - lastTime > 80) {
+      animOffset += 0.4;
+      drawTopo();
+      lastTime = ts;
+    }
+    rafId = requestAnimationFrame(animate);
+  }
+
+  // Respect reduced motion
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let resizeTimerTopo: ReturnType<typeof setTimeout>;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimerTopo);
+    resizeTimerTopo = setTimeout(resize, 150);
+  });
+  resize();
+
+  if (!reduced) {
+    rafId = requestAnimationFrame(animate);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cancelAnimationFrame(rafId);
+    } else if (!reduced) {
+      lastTime = 0;
+      rafId = requestAnimationFrame(animate);
+    }
+  });
+
+  // Re-read color on theme change
+  window.addEventListener('themechange', () => {
+    lineColor = getLineColor();
+    drawTopo();
+  });
+</script>

@@ -1,14 +1,17 @@
 ---
 /**
- * index.astro — Landing page.
+ * index.astro — Landing page (command center aesthetic).
  *
  * Full-viewport centered layout with animated SVG title, nav links, and tagline.
+ * Endfield-style: dark bar nav at top, scan-line texture, centered title block
+ * with decorative corner accents and status indicators.
  * Nav and description start hidden; AnimatedTitle reveals them via timeline.
  * Includes JSON-LD structured data for SEO.
  */
 import Layout from '../layouts/Layout.astro';
 import JsonLd from '../components/JsonLd.astro';
 import AnimatedTitle from '../components/AnimatedTitle.astro';
+import TriStripe from '../components/TriStripe.astro';
 ---
 <Layout title="Wingky — A vibe coder who actually gives a damn." description="A vibe coder who actually gives a damn.">
   <JsonLd data={{
@@ -28,14 +31,16 @@ import AnimatedTitle from '../components/AnimatedTitle.astro';
     }
   }} />
 
-  <div class="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4">
+  <!-- Dark bar header for landing removed -->
+
+  <div class="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4 z-10">
     <div class="flex flex-col items-center justify-center z-10 w-full text-center">
 
       <nav id="nav-links"
         style="opacity:0;transform:translateY(-20px)"
-        class="mb-10 flex space-x-12 text-sm tracking-widest text-muted">
-        <a href="/projects" class="hover:text-primary transition-colors duration-200">PROJECTS</a>
-        <a href="/about"  class="hover:text-primary transition-colors duration-200">ABOUT</a>
+        class="mb-10 flex space-x-12 text-xs tracking-[0.2em] uppercase">
+        <a href="/projects" class="text-[var(--color-accent-amber)] hover:text-primary transition-colors duration-200">PROJECTS</a>
+        <a href="/about" class="text-[var(--color-accent-amber)] hover:text-primary transition-colors duration-200">ABOUT</a>
       </nav>
 
       <AnimatedTitle isHomePage={true} text="wingky." />
@@ -43,11 +48,30 @@ import AnimatedTitle from '../components/AnimatedTitle.astro';
       <div id="desc-text"
         style="opacity:0;transform:translateY(20px)"
         class="mt-10">
-        <p class="text-base md:text-lg text-muted leading-relaxed max-w-lg mx-auto">
+        <p class="text-sm md:text-base text-muted leading-relaxed max-w-lg mx-auto">
           "A vibe coder who actually gives a damn."
         </p>
       </div>
 
     </div>
   </div>
+
 </Layout>
+
+<noscript>
+  <style>
+    #nav-links, #desc-text { opacity: 1 !important; transform: translateY(0) !important; }
+    #theme-toggle { opacity: 1 !important; pointer-events: auto !important; }
+  </style>
+</noscript>
+
+<style>
+  .landing-bar {
+    background-color: var(--color-bar);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+  }
+</style>

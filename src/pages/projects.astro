@@ -1,21 +1,26 @@
 ---
 /**
- * projects.astro — Projects showcase page.
+ * projects.astro — Projects showcase, Endfield cinematic style.
  *
- * Scrollable page listing open-source projects. Fetches GitHub star count
- * at build time and passes it to the ViewPortProject React island.
- * Includes JSON-LD CollectionPage structured data.
+ * Full-viewport cinematic chapter layout per project:
+ * - Visual-dominant sections (~70% viewport) with industrial duotone treatment
+ * - Noise texture overlay, massive background section numbers
+ * - Visual header with project name overlay (//NAME), deco arrow, feature points
+ * - Slide carousel with anime.js v4 clip-path transition per project
+ * - Slider nav (prev/next) + feature panel updates on slide change
+ * - Scroll-triggered reveal animations
+ *
+ * ── Sections ──
+ * - Frontmatter               Astro layout + SEO + Nav
+ * - <.prj>#viewport           ViewPort project chapter (slide carousel)
+ * - <.prj>#esempe             ESEMPE project chapter
+ * - <.prj>#honestresume       HonestResume project chapter
+ * - <style>                   All styles incl. responsive + reduced-motion
+ * - <script>                  Carousel logic + IntersectionObserver
  */
 import Layout from '../layouts/Layout.astro';
 import JsonLd from '../components/JsonLd.astro';
 import Nav from '../components/Nav.astro';
-import ViewPortProject from '../components/ViewPortProject.tsx';
-import EsempeProject from '../components/EsempeProject.tsx';
-
-const res = await fetch('https://api.github.com/repos/Wingky530/viewport')
-  .then(r => r.json())
-  .catch(() => null);
-const stars = res?.stargazers_count ?? null;
 ---
 <Layout scrollable title="Projects — Wingky" description="Open-source projects and tools by Wingky.">
   <JsonLd data={{
@@ -24,14 +29,772 @@ const stars = res?.stargazers_count ?? null;
     "name": "Projects — Wingky",
     "description": "Open-source projects and tools by Wingky.",
     "url": "https://wingky.vercel.app/projects",
-    "author": {
-      "@type": "Person",
-      "name": "Wingky"
-    }
+    "author": { "@type": "Person", "name": "Wingky" }
   }} />
   <Nav />
-  <div class="min-h-screen w-full relative overflow-x-hidden">
-    <EsempeProject client:load />
-    <ViewPortProject client:load stars={stars} />
-  </div>
+
+  <style is:global>html,body{overflow-x:hidden;max-width:100%}</style>
+
+  <!-- ═══ VIEWPORT ═══ -->
+  <section class="prj active" id="viewport">
+    <div class="prj-accent-bar" aria-hidden="true"></div>
+    <span class="prj-accent-label">VIEWPORT</span>
+
+    <div class="prj-visual">
+      <!-- Visual header box -->
+      <div class="prj-visual-header">
+        <div class="prj-name-line"><span class="prj-slash">//</span><span class="prj-sep"></span> VIEWPORT</div>
+        <div class="prj-action-row">
+          <div class="prj-action-box">
+            <svg class="prj-action-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="7" y1="7" x2="17" y2="17" />
+              <polyline points="17 7 17 17 7 17" />
+            </svg>
+          </div>
+          <span class="prj-action-label">PROJECT</span>
+        </div>
+        <p class="prj-desc-short">A free, open-source web developer toolkit. Inspect, debug, and preview your work, all in one place.</p>
+        <ul class="prj-points">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Preview any URL across devices</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Inspect CSS, DOM, and layouts</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Monitor performance in real time</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Audit accessibility &amp; Lighthouse</li>
+        </ul>
+      </div>
+
+      <!-- Screenshot area -->
+      <div class="prj-visual-screen">
+        <div class="prj-slides-wrapper">
+          <img src="/img/slides/viewport-1.jpg" alt="" class="prj-slide active" data-slide="0" />
+          <img src="/img/slides/viewport-2.jpg" alt="" class="prj-slide" data-slide="1" />
+          <img src="/img/slides/viewport-3.jpg" alt="" class="prj-slide" data-slide="2" />
+        </div>
+
+        <!-- Transition overlay -->
+        <div class="prj-slide-overlay-accent" aria-hidden="true"></div>
+
+        <!-- Permanent overlays -->
+        <div class="prj-noise" aria-hidden="true"></div>
+        <div class="prj-number-bg" aria-hidden="true">01</div>
+        <div class="prj-img-overlay" aria-hidden="true"></div>
+        <div class="prj-img-placeholder"></div>
+      </div>
+    </div>
+
+    <!-- Slider navigation -->
+    <div class="prj-slider-nav">
+      <button class="prj-slide-btn prj-prev" aria-label="Previous slide">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="prj-slide-counter"><span id="current-slide">01</span><span class="prj-slide-sep">/</span><span id="total-slides">03</span></span>
+      <button class="prj-slide-btn prj-next" aria-label="Next slide">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Body with feature panel -->
+    <div class="prj-body">
+      <div class="prj-meta">
+        <span class="prj-status green">● Active</span>
+        <span class="prj-type">Open Source</span>
+      </div>
+      <h2 class="prj-title">ViewPort</h2>
+      <p class="prj-desc">
+        Open-source web developer toolkit sekaligus portfolio. Scroll-driven hero, custom theme switcher dengan View Transitions API + grid ripple, stroke-draw SVG title. Dibangun 100% dari smartphone.
+      </p>
+      <div class="prj-stack">Astro · React · TypeScript · Tailwind v4 · Anime.js</div>
+
+      <div class="prj-feature-panel" id="feature-panel">
+        <h3 class="prj-feature-title" id="feature-title">Responsive Preview</h3>
+        <p class="prj-feature-desc" id="feature-desc">Test any URL inside a sandboxed iframe. Switch between phone, tablet, and desktop views with one tap.</p>
+        <ul class="prj-feature-list" id="feature-list">
+          <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Sandboxed iframe for safe browsing</li>
+          <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Phone, tablet, and desktop presets</li>
+          <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Rotate orientation instantly</li>
+        </ul>
+      </div>
+
+      <div class="prj-links">
+        <a href="https://github.com/Wingky530/viewport" target="_blank" rel="noopener noreferrer" class="prj-link ghost">GitHub</a>
+        <a href="https://wingky.is-a.dev" target="_blank" rel="noopener noreferrer" class="prj-link solid">Live Site →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ESEMPE ═══ -->
+  <section class="prj" id="esempe">
+    <div class="prj-accent-bar" aria-hidden="true"></div>
+    <span class="prj-accent-label">ESEMPE</span>
+    <div class="prj-visual">
+      <div class="prj-noise" aria-hidden="true"></div>
+      <div class="prj-number-bg" aria-hidden="true">02</div>
+      <img src="/img/ESEMPE.jpg" alt="ESEMPE project screenshot" class="prj-img" />
+      <div class="prj-img-placeholder"></div>
+      <div class="prj-img-overlay" aria-hidden="true"></div>
+    </div>
+    <div class="prj-body">
+      <div class="prj-meta">
+        <span class="prj-status amber">~ WIP</span>
+        <span class="prj-type">Marketing Site</span>
+      </div>
+      <h2 class="prj-title">ESEMPE</h2>
+      <p class="prj-desc">
+        Minecraft server hosting marketing site. Ore UI pricing carousel dengan 6 tier, real-time SVG TPS graph, curtain menu, dan immersive dark design terinspirasi dunia game.
+      </p>
+      <div class="prj-stack">Astro · React · Tailwind v4 · SVG Animation · Vercel</div>
+      <div class="prj-links">
+        <a href="https://github.com/Wingky530" target="_blank" rel="noopener noreferrer" class="prj-link ghost">GitHub</a>
+        <a href="https://esempe.id" target="_blank" rel="noopener noreferrer" class="prj-link solid">esempe.id →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ HONESTRESUME ═══ -->
+  <section class="prj" id="honestresume">
+    <div class="prj-accent-bar" aria-hidden="true"></div>
+    <span class="prj-accent-label">HONESTRESUME</span>
+    <div class="prj-visual">
+      <div class="prj-noise" aria-hidden="true"></div>
+      <div class="prj-number-bg" aria-hidden="true">03</div>
+      <img src="/img/projects/honestresume.png" alt="HonestResume project screenshot" class="prj-img" />
+      <div class="prj-img-placeholder"></div>
+      <div class="prj-img-overlay" aria-hidden="true"></div>
+    </div>
+    <div class="prj-body">
+      <div class="prj-meta">
+        <span class="prj-status blue">◈ Beta</span>
+        <span class="prj-type">Fullstack App</span>
+      </div>
+      <h2 class="prj-title">HonestResume</h2>
+      <p class="prj-desc">
+        AI-powered resume builder. Live color/font editor, 19 preset fonts, gradient canvas picker, PDF export ATS-friendly, share via 6-char ID. Go backend dengan OpenRouter AI + job search aggregation.
+      </p>
+      <div class="prj-stack">React · Go · MongoDB · OpenRouter AI · IndexedDB · Canvas API</div>
+      <div class="prj-links">
+        <a href="https://github.com/Wingky530" target="_blank" rel="noopener noreferrer" class="prj-link ghost">GitHub</a>
+        <a href="#" class="prj-link solid">Try Beta →</a>
+      </div>
+    </div>
+  </section>
 </Layout>
+
+<style>
+  @font-face {
+    font-family: 'GG Sans Bold';
+    src: url('/fonts/gg-sand-bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* =============================================
+     PROJECT SECTION
+     Full viewport — visual dominates, body below
+     ============================================= */
+  .prj {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    opacity: 1;
+  }
+
+  /* ─── VISUAL AREA ─────────────────────── */
+  .prj-visual {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+  }
+  .prj-visual-screen {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-bar);
+    width: 100%;
+    aspect-ratio: 1920/1080;
+  }
+
+  /* Accent bar — full-sized background, continuous */
+  .prj > .prj-accent-bar {
+    position: absolute;
+    left: 32px;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    background: var(--color-accent);
+  }
+  /* ViewPort: accent bar top aligned with //VIEWPORT */
+  #viewport > .prj-accent-bar {
+    top: 28px;
+  }
+  /* Inner bar — segmented per project (top: title level, bottom: section end) */
+  .prj > .prj-accent-bar::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 28px;
+    bottom: 0;
+    width: 20px;
+    background: var(--color-background);
+    z-index: 11;
+  }
+  /* ViewPort: inner bar top aligns with //VIEWPORT text */
+  #viewport > .prj-accent-bar::before {
+    top: 30px;
+  }
+
+  /* Rotated project name on top of inner bar */
+  .prj > .prj-accent-label {
+    position: absolute;
+    left: 60px;
+    top: 40px;
+    font-family: 'GG Sans Bold', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    white-space: nowrap;
+    transform: rotate(90deg);
+    transform-origin: left top;
+    z-index: 25;
+    pointer-events: none;
+  }
+  #viewport > .prj-accent-label {
+    top: 42px;
+  }
+  @media (max-width: 767px) {
+    .prj > .prj-accent-label {
+      left: 73px;
+      top: 70px;
+    font-size: 30px;
+      letter-spacing: -1px;
+    }
+    #viewport > .prj-accent-label {
+      top: 70px;
+    }
+  }
+  @media (max-width: 767px) {
+    .prj > .prj-accent-bar {
+      left: 24px;
+      width: 64px;
+    }
+    #viewport > .prj-accent-bar {
+      top: 28px;
+    }
+    .prj > .prj-accent-bar::before {
+      left: 15px;
+      width: 13px;
+    }
+  }
+
+  /* Noise grain texture overlay */
+  .prj-noise {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 300px 300px;
+  }
+
+  /* Massive background section number */
+  .prj-number-bg {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    z-index: 0;
+    font-size: clamp(80px, 15vw, 150px);
+    font-weight: 900;
+    line-height: 1;
+    color: var(--color-primary);
+    opacity: 0.04;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Screenshot image */
+  .prj-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    filter: grayscale(0.65) contrast(1.35) brightness(0.88);
+  }
+
+  /* Placeholder when image missing */
+  .prj-img-placeholder {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--color-bar);
+  }
+  .prj-img[src=""] ~ .prj-img-placeholder,
+  .prj-img:not([src]) ~ .prj-img-placeholder {
+    z-index: 3;
+  }
+
+  /* Industrial duotone color overlay */
+  .prj-img-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: var(--color-accent);
+    mix-blend-mode: overlay;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  /* ─── BODY ──────────────────────────── */
+  .prj-body {
+    padding: 28px 24px 40px 128px;
+    max-width: 720px;
+  }
+  @media (max-width: 767px) {
+    .prj-body { padding: 28px 24px 40px 104px; }
+  }
+
+  .prj-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .prj-status {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .prj-status.green { color: var(--color-accent-green); }
+  .prj-status.amber { color: var(--color-accent-amber); }
+  .prj-status.blue { color: var(--color-accent); }
+  .prj-type {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .prj-title {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    line-height: 1;
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+
+  .prj-desc {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--color-muted);
+    line-height: 1.8;
+    max-width: 560px;
+    margin-bottom: 18px;
+  }
+
+  .prj-stack {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--color-muted);
+    margin-bottom: 22px;
+  }
+
+  .prj-links {
+    display: flex;
+    gap: 10px;
+  }
+  .prj-link {
+    padding: 10px 24px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 3px;
+    transition: all 0.25s;
+  }
+  .prj-link.solid {
+    background: var(--color-accent);
+    color: var(--color-bar);
+  }
+  .prj-link.solid:hover { opacity: 0.85; }
+  .prj-link.ghost {
+    border: 1px solid var(--color-workshop-border);
+    color: var(--color-muted);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .prj-link.ghost:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  /* =============================================
+     SCROLL REVEAL ANIMATIONS
+     ============================================= */
+  .prj-visual,
+  .prj-body {
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .prj:not(.active) .prj-visual {
+    opacity: 0;
+  }
+  .prj:not(.active) .prj-body {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .prj.active .prj-body {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── SLIDE CAROUSEL ────────────────── */
+  .prj-slides-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .prj-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.65) contrast(1.35) brightness(0.88);
+    opacity: 0;
+  }
+  .prj-slide.active {
+    opacity: 1;
+  }
+
+  /* Transition overlays — hidden by default, revealed during slide change */
+  .prj-slide-overlay-accent {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    pointer-events: none;
+    background: #fff;
+    mix-blend-mode: screen;
+    transform: scaleX(0);
+    transform-origin: 100% 50%;
+    will-change: transform;
+  }
+  .prj-slide-overlay-accent.reveal {
+    transform: scaleX(1);
+    transition: transform 0.26s ease-in-out;
+  }
+
+  /* ─── VISUAL HEADER OVERLAY ──────────── */
+  .prj-visual-header {
+    padding: 28px 24px 0 128px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .prj-name-line {
+    font-family: 'GG Sans Bold', sans-serif;
+    font-size: clamp(56px, 18vw, 220px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -3px;
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    white-space: nowrap;
+  }
+  .prj-name-line .prj-slash {
+    font-size: 0.80em;
+    transform: translateY(-0.05em);
+  }
+  .prj-name-line .prj-sep {
+    width: 1px;
+    height: 0.55em;
+    background: var(--color-accent);
+    opacity: 0.5;
+    margin: 0 4px 0 8px;
+  }
+
+  .prj-action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: -15px;
+  }
+  .prj-action-box {
+    width: 50px;
+    height: 20px;
+    border-radius: 0;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 3px;
+    flex-shrink: 0;
+  }
+  .prj-action-arrow {
+    color: var(--color-accent);
+  }
+  .prj-action-label {
+    font-family: 'GG Sans Bold', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+  .prj-desc-short {
+    font-size: 13px;
+    color: var(--color-muted);
+    line-height: 1.5;
+    max-width: 520px;
+  }
+  .prj-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+  }
+  .prj-points li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .prj-points li svg {
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  /* ─── SLIDER NAV ───────────────────── */
+  .prj-slider-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    padding: 16px 24px;
+    position: relative;
+    z-index: 15;
+    background: var(--color-bar);
+  }
+  .prj-slide-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  .prj-slide-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  .prj-slide-counter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--color-muted);
+  }
+  .prj-slide-sep {
+    margin: 0 4px;
+    opacity: 0.4;
+  }
+
+  /* ─── FEATURE PANEL ────────────────── */
+  .prj-feature-panel {
+    margin: 28px 0;
+    padding: 20px 24px;
+    border-left: 2px solid var(--color-accent);
+    background: rgba(128,128,128,0.03);
+  }
+  .prj-feature-title {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-primary);
+    margin-bottom: 6px;
+  }
+  .prj-feature-desc {
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .prj-feature-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .prj-feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-muted);
+  }
+  .prj-feature-list li svg {
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  /* ─── MOBILE OVERRIDES ────────────── */
+  @media (max-width: 767px) {
+    .prj-visual-header {
+      padding: 28px 24px 0 104px;
+    }
+    .prj-points {
+      gap: 2px 10px;
+    }
+    .prj-points li {
+      font-size: 10px;
+    }
+    .prj-slider-nav {
+      padding: 12px 16px;
+    }
+    .prj-desc-short {
+      font-size: 12px;
+    }
+  }
+
+  /* ─── REDUCED MOTION ──────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .prj-slide-overlay-accent {
+      display: none;
+    }
+    .prj-slide {
+      transition: none;
+    }
+    .prj-visual,
+    .prj-body {
+      transition: none;
+    }
+    .prj:not(.active) .prj-visual,
+    .prj:not(.active) .prj-body {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  const $ = (sel, ctx) => (ctx || document).querySelector(sel);
+  const $$ = (sel, ctx) => (ctx || document).querySelectorAll(sel);
+
+  /* ── Slide data ─────────────────── */
+  const slides = [
+    {
+      img: '/img/slides/viewport-1.jpg',
+      title: 'Responsive Preview',
+      desc: 'Test any URL inside a sandboxed iframe. Switch between phone, tablet, and desktop views with one tap.',
+      points: ['Sandboxed iframe for safe browsing', 'Phone, tablet, and desktop presets', 'Rotate orientation instantly'],
+    },
+    {
+      img: '/img/slides/viewport-2.jpg',
+      title: 'CSS Inspector',
+      desc: 'Hover to inspect any element on the page. View computed styles and layout properties in real time.',
+      points: ['Hover to inspect any element', 'View computed styles and layout', 'Copy CSS rules instantly'],
+    },
+    {
+      img: '/img/slides/viewport-3.jpg',
+      title: 'Dev Tools Suite',
+      desc: 'Color picker, DOM tree, performance monitor, and more \u2014 all in one unified interface.',
+      points: ['Pick colors from any page element', 'Browse the full document tree', 'Track FCP, LCP, CLS, and FPS'],
+    },
+  ];
+
+  /* ── DOM refs ────────────────────── */
+  const accentEl = $('.prj-slide-overlay-accent');
+  const slideImgs = $$('.prj-slide');
+  const counter = document.getElementById('current-slide');
+  const ft = document.getElementById('feature-title');
+  const fd = document.getElementById('feature-desc');
+  const fl = document.getElementById('feature-list');
+
+  let current = 0;
+  let busy = false;
+  const DUR = 260;
+
+  /* ── Update content ──────────────── */
+  function update(idx) {
+    slideImgs.forEach((img, i) => img.classList.toggle('active', i === idx));
+    if (counter) counter.textContent = String(idx + 1).padStart(2, '0');
+    const s = slides[idx];
+    if (ft) ft.textContent = s.title;
+    if (fd) fd.textContent = s.desc;
+    if (fl) {
+      fl.innerHTML = s.points.map(p =>
+        `<li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>${p}</li>`
+      ).join('');
+    }
+  }
+
+  /* ── Slide transition ────────────── */
+  async function go(next, dir) {
+    if (busy || next === current) return;
+    busy = true;
+
+    /* Phase 1: overlay wipes right to left */
+    accentEl.classList.remove('reveal');
+    void accentEl.offsetWidth;
+    accentEl.classList.add('reveal');
+
+    await new Promise(r => setTimeout(r, DUR));
+
+    /* Phase 2: swap and hide overlay instantly */
+    current = next;
+    update(current);
+    accentEl.classList.remove('reveal');
+
+    await new Promise(r => setTimeout(r, 80));
+    busy = false;
+  }
+
+  $('.prj-next')?.addEventListener('click', () => go((current + 1) % slides.length, 1));
+  $('.prj-prev')?.addEventListener('click', () => go((current - 1 + slides.length) % slides.length, -1));
+
+  /* ── Init ─────────────────────────── */
+  if (document.getElementById('total-slides')) {
+    document.getElementById('total-slides').textContent = String(slides.length).padStart(2, '0');
+  }
+  update(0);
+
+  /* ── Section observer ─────────────── */
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('active');
+    });
+  }, { threshold: 0.35 });
+  $$('.prj[id]').forEach(s => obs.observe(s));
+
+  /* ── Image error fallback ─────────── */
+  $$('.prj-img').forEach(img => {
+    img.addEventListener('error', () => { img.style.display = 'none'; });
+  });
+</script>

@@ -13,6 +13,8 @@
 import '../styles/global.css';
 import GridRipple from '../components/GridRipple.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import TopoBackground from '../components/TopoBackground.astro';
+import Footer from '../components/Footer.astro';
 
 interface Props {
   title?: string;
@@ -41,7 +43,7 @@ const ogImageHeight = '630';
 <html lang="en" data-theme="dark" class={htmlClass}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="keywords" content={keywords} />
@@ -83,6 +85,7 @@ const ogImageHeight = '630';
     </script>
   </head>
   <body data-scrollable={scrollable ? "true" : undefined}>
+    <TopoBackground />
     <GridRipple />
     <slot />
     <ThemeToggle />

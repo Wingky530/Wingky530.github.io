@@ -2,7 +2,7 @@
 /**
  * Nav.astro
  *
- * Responsive navigation bar with optional slide-in menu panel.
+ * Endfield-style dark bar navigation header with tri-color accent stripe.
  * Shows AnimatedTitle (non-homepage variant) on the left and either a hamburger
  * menu button or a static opposite-page link on the right.
  *
@@ -12,6 +12,8 @@
  * - openMenu        Random-direction slide-in for backdrop and clip-path reveal for panel
  * - closeMenu       Reverse animation with staggered timing
  * - Keyboard        Escape key closes menu
+ * - Dark bar        Solid --color-bar background, Endfield aesthetic
+ * - Tri-stripe      TriStripe component below bar as separator
  */
 import AnimatedTitle from './AnimatedTitle.astro';
 
@@ -24,7 +26,7 @@ const path = Astro.url.pathname;
 let oppositeLabel = '';
 let oppositeHref = '';
 if (path.startsWith('/projects')) {
-  oppositeLabel = 'ABOUT ME';
+  oppositeLabel = 'ABOUT';
   oppositeHref = '/about';
 } else if (path.startsWith('/about')) {
   oppositeLabel = 'PROJECTS';
@@ -32,43 +34,48 @@ if (path.startsWith('/projects')) {
 }
 ---
 
-<nav class="flex items-center justify-between px-5 md:pl-[calc((100%-680px)/2)] md:pr-5 h-16 bg-background">
-  <AnimatedTitle isHomePage={false} text="wingky." />
+<header class="nav-bar">
+  <nav class="flex items-center justify-between px-5 md:px-8 h-14">
+    <AnimatedTitle isHomePage={false} text="wingky." />
 
-  {menu ? (
-  <button id="menu-toggle" class="flex flex-col items-end gap-1.5 p-3" aria-label="Menu">
-    <span class="block h-0.5 w-6 rounded bg-primary" />
-    <span class="block h-0.5 w-5 rounded bg-accent" />
-  </button>
-  ) : oppositeLabel && (
-  <a href={oppositeHref} class="text-sm tracking-widest text-muted hover:text-primary transition-colors duration-200">
-    {oppositeLabel}
-  </a>
-  )}
-</nav>
+    <div class="flex items-center gap-6">
+      {!menu && oppositeLabel && (
+        <a href={oppositeHref} class="text-xs tracking-[0.2em] uppercase text-[var(--color-accent-amber)] hover:text-primary transition-colors duration-200">
+          {oppositeLabel}
+        </a>
+      )}
+      {menu && (
+        <button id="menu-toggle" class="flex flex-col items-end gap-1.5 p-3" aria-label="Menu">
+          <span class="block h-0.5 w-6 rounded bg-primary" />
+          <span class="block h-0.5 w-6 rounded bg-[var(--color-accent-amber)]" />
+        </button>
+      )}
+    </div>
+  </nav>
+</header>
 
 {menu && (
 <div id="menu-group" class="fixed inset-0 z-60 pointer-events-none">
-  <div id="menu-backdrop" class="absolute inset-0 bg-primary/40 backdrop-blur-sm"
+  <div id="menu-backdrop" class="absolute inset-0 bg-[var(--color-bar)]/80 backdrop-blur-sm"
     style="transform: translateX(-100%); transition: transform 0.45s cubic-bezier(0.76, 0, 0.24, 1);"
     onclick="document.getElementById('menu-toggle')?.click()"></div>
 
   <div id="menu-panel-wrap" class="absolute inset-0 flex items-center justify-center">
-    <div id="menu-panel" class="w-[88%] bg-background border border-border shadow-2xl rounded-2xl overflow-hidden pointer-events-auto"
+    <div id="menu-panel" class="w-[88%] bg-[var(--color-bar)] border border-[var(--color-workshop-border)] rounded-lg overflow-hidden pointer-events-auto"
       style="max-width: 400px; clip-path: inset(0 100% 0 0); transition: clip-path 0.45s cubic-bezier(0.76, 0, 0.24, 1);">
-      <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-        <span class="text-base font-bold text-primary">Menu</span>
-        <button onclick="document.getElementById('menu-toggle')?.click()" class="p-1.5 text-muted hover:text-primary rounded-lg transition-colors" aria-label="Close menu">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--color-workshop-border)]">
+        <span class="text-xs tracking-[0.2em] uppercase text-[var(--color-accent-amber)]">Navigation</span>
+        <button onclick="document.getElementById('menu-toggle')?.click()" class="p-3 text-muted hover:text-primary rounded-lg transition-colors" aria-label="Close menu" style="min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M5 5l10 10M15 5l-10 10"/>
           </svg>
         </button>
       </div>
       <nav class="p-3 flex flex-col gap-1">
         <a href="/projects" onclick="document.getElementById('menu-toggle')?.click()"
-          class="px-4 py-3 text-sm font-medium text-muted hover:text-accent rounded-lg transition-colors">PROJECTS</a>
+          class="px-4 py-3 text-sm font-medium text-primary hover:text-accent rounded transition-colors">PROJECTS</a>
         <a href="/about" onclick="document.getElementById('menu-toggle')?.click()"
-          class="px-4 py-3 text-sm font-medium text-muted hover:text-accent rounded-lg transition-colors">ABOUT</a>
+          class="px-4 py-3 text-sm font-medium text-primary hover:text-accent rounded transition-colors">ABOUT</a>
       </nav>
     </div>
   </div>
@@ -76,15 +83,17 @@ if (path.startsWith('/projects')) {
 )}
 
 <style>
+  .nav-bar {
+    position: relative;
+    z-index: 50;
+  }
   #menu-toggle span {
-    transition: transform 0.3s cubic-bezier(0.76, 0, 0.24, 1), width 0.3s cubic-bezier(0.76, 0, 0.24, 1);
+    transition: transform 0.3s cubic-bezier(0.76, 0, 0.24, 1);
   }
   #menu-toggle[data-open="true"] span:first-child {
-    width: 1.5rem;
     transform: rotate(45deg) translateY(6px);
   }
   #menu-toggle[data-open="true"] span:last-child {
-    width: 1.5rem;
     transform: rotate(-45deg) translateY(-6px);
   }
   #menu-group.no-transition #menu-backdrop,

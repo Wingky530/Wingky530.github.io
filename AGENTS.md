@@ -40,7 +40,8 @@ This document provides essential context for working in the `wingky` repository.
 ### Other Components
 -   **AnimatedTitle.astro** — SVG title with stroke-draw intro animation using opentype.js. Controls visibility of nav, desc, and theme toggle via timeline. Contains internal `grid-svg` for decorative lines that fades out after animation completes.
 -   **Canvas.astro** — Floating particle system. Listens to `themechange` to update particle color.
--   **ViewPortProject.tsx** — React island component (client:load). Project showcase with tabbed SVG illustrations, animated via CSS keyframes. Uses Anime.js for content fade on tab switch.
+-   **ViewPortProject.tsx** — React island component (client:load). Project showcase with tabbed SVG illustrations, animated via CSS keyframes. Uses Anime.js for content fade on tab switch. Currently NOT imported anywhere — its feature data structure was ported to projects.astro client script.
+-   **Phosphor Icons:** Used inline as SVGs throughout `.astro` files (not as React components). Common icons used: `ArrowElbowDownRight` (decorative arrow), `ChevronLeft`/`ChevronRight` (carousel nav), `CheckCircle` (feature checkmarks). All rendered as raw `<svg>` tags with viewBox, fill/stroke attributes.
 
 ## Specific Toolchain Quirks & Conventions
 -   **Astro Client-side Scripts:** Native `<script>` tags in `.astro` files with `import` statements already get Vite processing — **no `client:load` needed**. The `client:load` directive is only for framework components (React, Vue, etc.). Direct `import` in `<script define:vars={{...}}>` will fail as those are treated as inline scripts without Vite processing.

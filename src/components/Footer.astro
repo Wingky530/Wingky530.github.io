@@ -1,0 +1,28 @@
+---
+/**
+ * Footer.astro — Endfield-style dark bar footer with tri-color accent stripe.
+ *
+ * Fixed bottom bar across all pages. Contains brand text (left) and year (right).
+ * TriStripe sits above as a separator. Positioned above ThemeToggle z-layer.
+ */
+import TriStripe from './TriStripe.astro';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="footer-bar">
+  <TriStripe />
+  <div class="flex items-center justify-between px-5 md:px-8 h-10">
+    <span class="text-xs tracking-[0.15em] text-muted">wingky</span>
+    <span class="text-xs text-muted">© {year}</span>
+  </div>
+</footer>
+
+<style>
+  .footer-bar {
+    background-color: var(--color-bar);
+    position: relative;
+    z-index: 40;
+    margin-top: auto;
+  }
+</style>

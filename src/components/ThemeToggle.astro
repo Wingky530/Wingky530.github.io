@@ -68,7 +68,7 @@
 <style>
   #theme-toggle {
     position: fixed;
-    bottom: 32px;
+    bottom: 56px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 50;
@@ -84,6 +84,9 @@
     opacity: 0;
     pointer-events: none;
   }
+  #theme-toggle:hover {
+    transform: translateX(-50%) scale(1.15);
+  }
   :global([data-scrollable="true"]) #theme-toggle {
     position: relative;
     bottom: auto;
@@ -95,9 +98,6 @@
   }
   :global([data-scrollable="true"]) #theme-toggle:hover {
     transform: scale(1.15);
-  }
-  #theme-toggle:hover {
-    transform: translateX(-50%) scale(1.15);
   }
 
   #toggle-icon {

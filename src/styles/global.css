@@ -18,47 +18,61 @@
   src: url('/fonts/wingky.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
-  font-display: block;
+  font-display: swap;
 }
 
 @theme {
   --color-background: #252422;
+  --color-background-end: #1a1917;
   --color-primary:    #ebebdf;
-  --color-muted:      #918f89;
+  --color-muted:      #a09e96;
   --color-accent:     #03a9f4;
   --color-accent-muted: #0369a1;
+  --color-accent-amber: #f4a903;
+  --color-accent-green: #34d399;
   --color-border:     #918f89;
   --color-workshop-border: #3a3835;
+  --color-bar:        #1a1917;
 }
 
 [data-theme="light"] {
   --color-background: #ebebdf;
+  --color-background-end: #ddddd2;
   --color-primary:    #252422;
   --color-muted:      #5c5b56;
   --color-accent:     #01517a;
   --color-accent-muted: #01354e;
+  --color-accent-amber: #c78700;
+  --color-accent-green: #059669;
   --color-border:     #5c5b56;
   --color-workshop-border: #d4d2c8;
+  --color-bar:        #2f2d2a;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]):not([data-theme="dark"]) {
     --color-background: #ebebdf;
+    --color-background-end: #ddddd2;
     --color-primary:    #252422;
     --color-muted: #5c5b56;
     --color-accent:     #03a9f4;
     --color-accent-muted: #0284c7;
+    --color-accent-amber: #c78700;
+    --color-accent-green: #059669;
     --color-border:     #d4d2c8;
+    --color-bar:        #2f2d2a;
   }
 }
 
 html, body {
   font-family: 'Wingky', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', ui-monospace, monospace;
 }
 
 body {
-  background-color: var(--color-background);
+  background: radial-gradient(ellipse at center, var(--color-background) 0%, var(--color-background-end) 100%);
   color: var(--color-primary);
+  min-height: 100dvh;
 }
 
 :focus-visible {
